@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using static UnityEngine.Rendering.DebugUI;
 
@@ -7,13 +8,12 @@ public class ScrewHightlight : MonoBehaviour
 {
     public Material mat;
     public float transitionTime = 0.5f;
+    public bool isHighlighted { get; private set; }
 
-    public void SetHightlight(bool value)
+    private void Start()
     {
-        if (value)
-            StartCoroutine(HighlightAnim(1, transitionTime));
-        else
-            StartCoroutine(HighlightAnim(0, transitionTime));
+        //Initialise l'état highlighté
+        isHighlighted = mat.GetFloat("_Highlight")>0.5f;
     }
 
     IEnumerator HighlightAnim(float end, float time)
@@ -26,8 +26,21 @@ public class ScrewHightlight : MonoBehaviour
 
             mat.SetFloat("_Highlight", Mathf.Lerp(start, end, t));
 
-
             yield return null;
         }
+    }
+
+    public void SetHightlight(bool value)
+    {
+        isHighlighted = value;
+        if (value)
+            StartCoroutine(HighlightAnim(1, transitionTime));
+        else
+            StartCoroutine(HighlightAnim(0, transitionTime));
+    }
+
+    public void ToggleHighlight()
+    {
+        SetHightlight(!isHighlighted);
     }
 }

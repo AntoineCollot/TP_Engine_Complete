@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class EngineSplitting : MonoBehaviour
 {
+    //Optionel, une struct permet de mieux ranger ces variables
     [System.Serializable]
     public struct EnginePart
     {
@@ -14,25 +15,41 @@ public class EngineSplitting : MonoBehaviour
     }
 
     public float splitAnimationTime = 1;
+    //Tableau de la struct contenant les variables nescessaires au split
     public EnginePart[] parts;
 
     void Start()
     {
         FindObjectOfType<ScrewManager>().onAllScrewsDisabled.AddListener(OnAllScrewsDisabled);
-        
+
         //Initialise les positions d'origines
-        for(int i=0; i<parts.Length; i++)
+        for (int i = 0; i < parts.Length; i++)
         {
             parts[i].originalPosition = parts[i].enginePart.position;
         }
     }
 
+    /// <summary>
+    /// Callback de l'événement des vis.
+    /// </summary>
     private void OnAllScrewsDisabled()
     {
-        StartCoroutine(SplitEngine(splitAnimationTime));
+        //Met fin aux eventuelles autres coroutines si jamais l'utilisateur clique trop vite et essaie de lancer plusieurs animations à la fois
+        StopAllCoroutines();
+        StartCoroutine(SplitEngine(0,1,splitAnimationTime));
     }
 
-    IEnumerator SplitEngine(float time)
+    public void UnsplitEngine()
+    {
+        StopAllCoroutines();
+        StartCoroutine(SplitEngine(1, 0, splitAnimationTime));
+    }
+
+    /// <summary>
+    /// Animation de split du moteur.
+    /// Start et end permettent de unsplit le moteur si besoin, en commencant de 1 et finissant à 0 (0 il est fermé, 1 il est ouvert).
+    /// </summary>
+    IEnumerator SplitEngine(float start, float end, float time)
     {
         float t = 0;
         while (t < 1)
@@ -41,35 +58,12 @@ public class EngineSplitting : MonoBehaviour
 
             foreach (EnginePart part in parts)
             {
-                float smoothedT = Mathf.SmoothStep(0.0f, 1.0f, t);
+                //On utilise la fonction SmoothStep pour smoother t (courbe ease in out au lieu de linéaire)
+                float smoothedT = Mathf.SmoothStep(start, end, t);
                 part.enginePart.position = Vector3.Lerp(part.originalPosition, part.splitTargetPos.position, smoothedT);
             }
 
             yield return null;
-        }
-    }
-
-    /// <summary>
-    /// Optionnel, permet de dessiner des lignes dans la scène pour aider au debug
-    /// </summary>
-    private void OnDrawGizmosSelected()
-    {
-        if (parts == null)
-            return;
-
-        Gizmos.color = Color.blue;
-        foreach (EnginePart part in parts)
-        {
-            //Make sure the target pos & part is not null
-            if (part.enginePart == null || part.splitTargetPos == null)
-                continue;
-
-            //If the original position isn't set, draw from the object to the target
-            if (part.originalPosition == Vector3.zero)
-                Gizmos.DrawLine(part.enginePart.position, part.splitTargetPos.position);
-            //If the original position is set, draw from the original pos to the target
-            else
-                Gizmos.DrawLine(part.originalPosition, part.splitTargetPos.position);
         }
     }
 }

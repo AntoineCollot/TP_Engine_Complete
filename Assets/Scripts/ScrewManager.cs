@@ -37,10 +37,15 @@ public class ScrewManager : MonoBehaviour
                 onAllScrewsDisabled.Invoke();
             }
 
+            //Met à jour l'état précédant pour la prochaine fois.
             lastAllScrewDisabledState = allScrewsDisabledState;
         }
     }
 
+    /// <summary>
+    /// Vérifie si toutes les vis sont désactivées.
+    /// </summary>
+    /// <returns></returns>
     bool AreAllScrewsDisabled()
     {
         foreach (GameObject screw in screws)
@@ -50,5 +55,16 @@ public class ScrewManager : MonoBehaviour
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Active toutes les vis
+    /// </summary>
+    public void EnableAllScrews()
+    {
+        foreach (GameObject screw in screws)
+        {
+            screw.SetActive(true);
+        }
     }
 }
